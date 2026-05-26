@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IDDA SSH Public-Safe PoC Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg:#050b16;
+  --panel:#0f172a;
+  --border:rgba(148,163,184,.16);
+  --text:#e5eefc;
+  --muted:#93a4bf;
+  --soft:#cbd5e1;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.5;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(96,165,250,.16), transparent 28%),
+    radial-gradient(circle at 85% 5%, rgba(167,139,250,.12), transparent 24%),
+    linear-gradient(180deg,#030712,#07111f);
+}
+.page {
+  max-width:1280px;
+  margin:0 auto;
+  padding:32px 20px 64px;
+}
+.hero,.card,.section,.chart-card {
+  background:linear-gradient(180deg,rgba(17,28,51,.96),rgba(9,17,32,.96));
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:0 18px 48px rgba(0,0,0,.35);
+}
+.hero {
+  padding:32px;
+  overflow:hidden;
+  position:relative;
+}
+.hero:after {
+  content:"";
+  position:absolute;
+  right:-70px;
+  bottom:-90px;
+  width:280px;
+  height:280px;
+  background:radial-gradient(circle,rgba(34,197,94,.14),transparent 65%);
+}
+h1 {
+  margin:0 0 10px;
+  font-size:38px;
+  letter-spacing:-.04em;
+}
+.subtitle {
+  color:var(--muted);
+  max-width:980px;
+  font-size:15px;
+}
+.pills {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.pill {
+  padding:9px 13px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  background:rgba(34,197,94,.10);
+  border:1px solid rgba(34,197,94,.25);
+  color:#dcffe7;
+}
+.pill.blue {
+  background:rgba(96,165,250,.10);
+  border-color:rgba(96,165,250,.25);
+  color:#dbeafe;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-top:20px;
+}
+.card {
+  padding:18px;
+}
+.label {
+  color:var(--muted);
+  text-transform:uppercase;
+  font-size:12px;
+  letter-spacing:.08em;
+}
+.value {
+  font-size:31px;
+  font-weight:800;
+  letter-spacing:-.03em;
+  margin-top:6px;
+}
+.sub {
+  color:var(--soft);
+  font-size:13px;
+  margin-top:6px;
+}
+.section {
+  margin-top:22px;
+  padding:24px;
+}
+h2 {
+  margin:0 0 12px;
+  font-size:22px;
+  letter-spacing:-.02em;
+}
+h3 {
+  margin:0 0 16px;
+  font-size:16px;
+}
+p {
+  color:var(--muted);
+  margin:10px 0;
+}
+.note {
+  margin-top:14px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:rgba(245,158,11,.08);
+  border:1px solid rgba(245,158,11,.25);
+  color:#fde7b0;
+}
+.safe {
+  margin-top:14px;
+  padding:14px 16px;
+  border-radius:16px;
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.25);
+  color:#dcffe7;
+}
+.chart-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:18px;
+}
+.chart-card {
+  padding:18px;
+}
+.donut-layout {
+  display:grid;
+  grid-template-columns:250px 1fr;
+  gap:18px;
+  align-items:center;
+}
+.donut {
+  width:230px;
+  height:230px;
+  border-radius:50%;
+  position:relative;
+  margin:auto;
+}
+.hole {
+  position:absolute;
+  inset:30px;
+  border-radius:50%;
+  background:radial-gradient(circle at top,#10192d,#07111f);
+  border:1px solid rgba(148,163,184,.14);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.hole strong {
+  font-size:28px;
+  letter-spacing:-.03em;
+}
+.hole span {
+  color:var(--muted);
+  font-size:13px;
+  margin-top:4px;
+}
+.legend {
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.legend-row {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:13px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(148,163,184,.08);
+}
+.legend-left {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.dot {
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  display:inline-block;
+}
+.legend-num {
+  font-weight:800;
+  color:var(--text);
+}
+.legend-num span {
+  color:var(--muted);
+  font-weight:500;
+  margin-left:8px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+}
+th,td {
+  padding:12px 14px;
+  border-bottom:1px solid rgba(148,163,184,.10);
+  text-align:left;
+  vertical-align:top;
+}
+th {
+  color:#d3ddee;
+  background:rgba(255,255,255,.03);
+  font-size:13px;
+}
+td {
+  color:var(--soft);
+  font-size:14px;
+}
+code {
+  background:rgba(96,165,250,.10);
+  color:#dbeafe;
+  padding:3px 8px;
+  border-radius:8px;
+  font-size:12px;
+}
+.bar {
+  height:14px;
+  background:#1e293b;
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.10);
+}
+.bar-fill {
+  height:100%;
+  border-radius:999px;
+}
+.sample {
+  font-family:Consolas,monospace;
+  word-break:break-word;
+  color:#dbeafe;
+}
+.footer {
+  margin-top:18px;
+  color:var(--muted);
+  font-size:13px;
+}
+@media(max-width:1050px) {
+  .grid,.chart-grid { grid-template-columns:1fr 1fr; }
+  .donut-layout { grid-template-columns:1fr; }
+}
+@media(max-width:720px) {
+  .grid,.chart-grid { grid-template-columns:1fr; }
+  h1 { font-size:29px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1>IDDA SSH Public-Safe PoC Report</h1>
+    <div class="subtitle">
+      Public-safe HTML artifact generated from a bounded local SSH/auth sample.
+      The report shows event classes, ratios, visual breakdowns, and abstracted examples only.
+      No raw logs, raw hostnames, local usernames, paths, TTY values, commands, or IP addresses are exposed.
+    </div>
+    <div class="pills">
+      <div class="pill">PASS: local sample parsed</div>
+      <div class="pill blue">Mode: OFFLINE_SAMPLE_ANALYSIS</div>
+      <div class="pill blue">Raw values redacted</div>
+      <div class="pill blue">Repo-safe artifact</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label">Total lines</div>
+      <div class="value">88</div>
+      <div class="sub">bounded local sample</div>
+    </div>
+    <div class="card">
+      <div class="label">SSH/Auth related</div>
+      <div class="value">88</div>
+      <div class="sub">100.00% of total</div>
+    </div>
+    <div class="card">
+      <div class="label">Other / empty</div>
+      <div class="value">0</div>
+      <div class="sub">0.00% of total</div>
+    </div>
+    <div class="card">
+      <div class="label">Abstracted samples</div>
+      <div class="value">12</div>
+      <div class="sub">no raw local details shown</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>1. Scope Boundary</h2>
+    <p>
+      This artifact is a local offline PoC report. It demonstrates the client-facing report experience:
+      event classes, ratios, visual breakdowns, and reviewable public-safe examples.
+    </p>
+    <div class="note">
+      This is not an intrusion detection claim, not a live ingestion benchmark, and not a production deployment.
+      It is a bounded offline report artifact.
+    </div>
+    <div class="safe">
+      Public-safe rule: this HTML does not contain raw SSH/auth lines. Examples are abstracted and redacted before rendering.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2. Visual Summary</h2>
+    <div class="chart-grid">
+      
+    <div class="chart-card">
+        <h3>Event Class Distribution</h3>
+        <div class="donut-layout">
+            <div class="donut" style="background: conic-gradient(#14b8a6 0.00% 48.86%, #a78bfa 48.86% 96.59%, #38bdf8 96.59% 100.00%);">
+                <div class="hole">
+                    <strong>88</strong>
+                    <span>total lines</span>
+                </div>
+            </div>
+            <div class="legend">
+        <div class="legend-row">
+            <div class="legend-left">
+                <span class="dot" style="background:#14b8a6"></span>
+                <code>session_opened</code>
+            </div>
+            <div class="legend-num">43 <span>48.86%</span></div>
+        </div>
+        
+        <div class="legend-row">
+            <div class="legend-left">
+                <span class="dot" style="background:#a78bfa"></span>
+                <code>session_closed</code>
+            </div>
+            <div class="legend-num">42 <span>47.73%</span></div>
+        </div>
+        
+        <div class="legend-row">
+            <div class="legend-left">
+                <span class="dot" style="background:#38bdf8"></span>
+                <code>sudo_event</code>
+            </div>
+            <div class="legend-num">3 <span>3.41%</span></div>
+        </div>
+        </div>
+        </div>
+    </div>
+    
+      
+    <div class="chart-card">
+        <h3>SSH/Auth vs Other</h3>
+        <div class="donut-layout">
+            <div class="donut" style="background: conic-gradient(#60a5fa 0.00% 100.00%, #64748b 100.00% 100.00%);">
+                <div class="hole">
+                    <strong>100.00%</strong>
+                    <span>ssh/auth related</span>
+                </div>
+            </div>
+            <div class="legend">
+        <div class="legend-row">
+            <div class="legend-left">
+                <span class="dot" style="background:#60a5fa"></span>
+                <code>ssh_auth_related</code>
+            </div>
+            <div class="legend-num">88 <span>100.00%</span></div>
+        </div>
+        
+        <div class="legend-row">
+            <div class="legend-left">
+                <span class="dot" style="background:#64748b"></span>
+                <code>other_or_empty</code>
+            </div>
+            <div class="legend-num">0 <span>0.00%</span></div>
+        </div>
+        </div>
+        </div>
+    </div>
+    
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. Event Class Breakdown</h2>
+    <table>
+      <tr><th>Class</th><th>Lines</th><th>Ratio</th><th>Visual</th></tr>
+      
+        <tr>
+            <td><code>session_opened</code></td>
+            <td>43</td>
+            <td>48.86%</td>
+            <td><div class="bar"><div class="bar-fill" style="width:48.86%; background:#14b8a6;"></div></div></td>
+        </tr>
+        
+        <tr>
+            <td><code>session_closed</code></td>
+            <td>42</td>
+            <td>47.73%</td>
+            <td><div class="bar"><div class="bar-fill" style="width:47.73%; background:#a78bfa;"></div></div></td>
+        </tr>
+        
+        <tr>
+            <td><code>sudo_event</code></td>
+            <td>3</td>
+            <td>3.41%</td>
+            <td><div class="bar"><div class="bar-fill" style="width:3.41%; background:#38bdf8;"></div></div></td>
+        </tr>
+        
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>4. Abstracted Examples</h2>
+    <p>
+      These are not raw log lines. They are public-safe event abstractions generated from local log classes.
+      Hostnames, users, paths, TTY values, commands, and network identifiers are intentionally redacted.
+    </p>
+    <table>
+      <tr><th>Line</th><th>Class</th><th>Public-safe abstraction</th></tr>
+      
+        <tr>
+            <td>1</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>2</td>
+            <td><code>session_closed</code></td>
+            <td class="sample">auth_event: session closed | host=[redacted] | user=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>3</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>4</td>
+            <td><code>session_closed</code></td>
+            <td class="sample">auth_event: session closed | host=[redacted] | user=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>5</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>6</td>
+            <td><code>session_closed</code></td>
+            <td class="sample">auth_event: session closed | host=[redacted] | user=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>7</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>8</td>
+            <td><code>session_closed</code></td>
+            <td class="sample">auth_event: session closed | host=[redacted] | user=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>9</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>10</td>
+            <td><code>sudo_event</code></td>
+            <td class="sample">privilege_event: sudo activity | host=[redacted] | user=[redacted] | tty=[redacted] | path=[redacted] | command=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>11</td>
+            <td><code>session_closed</code></td>
+            <td class="sample">auth_event: session closed | host=[redacted] | user=[redacted]</td>
+        </tr>
+        
+        <tr>
+            <td>12</td>
+            <td><code>session_opened</code></td>
+            <td class="sample">auth_event: session opened | host=[redacted] | user=[redacted] | actor=[redacted]</td>
+        </tr>
+        
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>5. Public-Safe Notice</h2>
+    <p>
+      This report does not expose protected IDDA decision logic, production thresholds, tuning rules,
+      raw logs, raw IP addresses, hostnames, usernames, local paths, commands, deployment details, or customer data.
+    </p>
+    <p>
+      It demonstrates the shape of a client-facing PoC deliverable: a readable HTML artifact with metrics,
+      visual summaries, event-class tables, and public-safe review examples.
+    </p>
+  </div>
+
+  <div class="footer">
+    Generated at <code>2026-05-26 23:06:47 UTC</code> · Source label: <code>bounded_local_ssh_auth_sample</code>
+  </div>
+
+</div>
+</body>
+</html>
