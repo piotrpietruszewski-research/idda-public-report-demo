@@ -45,3 +45,5 @@ host=[redacted]
 user=[redacted]
 path=[redacted]
 command=[redacted]
+
+The license applies only to this public-safe HTML report artifact and documentation. It does not grant rights to any private IDDA core implementation, production logic, thresholds, tuning rules, or unpublished materials.
