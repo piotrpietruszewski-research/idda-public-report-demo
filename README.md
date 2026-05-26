@@ -38,6 +38,8 @@ The purpose of this artifact is to demonstrate the format of a possible IDDA-sty
 
 The report does not expose raw hostnames, usernames, IP addresses, local paths, TTY values, commands, raw log lines, or customer data.
 
+The license applies only to this public-safe HTML report artifact and documentation. It does not grant rights to any private IDDA core implementation, production logic, thresholds, tuning rules, or unpublished materials.
+
 Examples shown in the HTML are abstracted before rendering, using placeholders such as:
 
 ```text
@@ -46,4 +48,4 @@ user=[redacted]
 path=[redacted]
 command=[redacted]
 
-The license applies only to this public-safe HTML report artifact and documentation. It does not grant rights to any private IDDA core implementation, production logic, thresholds, tuning rules, or unpublished materials.
+
